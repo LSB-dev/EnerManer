@@ -8,9 +8,41 @@ export interface WerkApiResponse {
   endConsumer: string;
 }
 
-/** Fetches the first Werk (“Hauptzähler”) from the back-end */
 export async function fetchWerk(werkId = 1): Promise<WerkApiResponse> {
   const res = await fetch(`${API_BASE}/api/werk/${werkId}`);
-  if (!res.ok) throw new Error(`API request failed ⇒ ${res.statusText}`);
-  return res.json() as Promise<WerkApiResponse>;
+  if (!res.ok) throw new Error(res.statusText);
+  return res.json();
+}
+
+// ───────────────────────────────────────────────────────────────
+// ✨ NEW helpers for quarterly reports
+// ───────────────────────────────────────────────────────────────
+export interface QuarterlyReportDto {
+  id?: number;
+  quarter: number;
+  year: number;
+  electricity: number;
+  gas: number;
+  submissionDate?: string;
+}
+
+export async function postQuarterlyReport(
+  werkId: number,
+  body: QuarterlyReportDto
+): Promise<QuarterlyReportDto> {
+  const res = await fetch(`${API_BASE}/api/werk/${werkId}/report`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+export async function getQuarterlyReports(
+  werkId: number
+): Promise<QuarterlyReportDto[]> {
+  const res = await fetch(`${API_BASE}/api/werk/${werkId}/reports`);
+  if (!res.ok) throw new Error(res.statusText);
+  return res.json();
 }

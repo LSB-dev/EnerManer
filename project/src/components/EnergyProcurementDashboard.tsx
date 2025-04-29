@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';  
 import { useNavigate } from 'react-router-dom';
 import { Factory, MessageSquare, ChevronUp, ChevronDown } from 'lucide-react';
 import { PlantData, EnergyContract, SubmissionStatus } from '../types';
@@ -10,6 +10,7 @@ import AggregatedEnergyChart from './AggregatedEnergyChart';
 import MeteringPointsList from './MeteringPointsList';
 import EnergyContracts from './EnergyContracts';
 import { v4 as uuidv4 } from 'uuid';
+import { getQuarterlyReports } from '../api';  
 
 const demoContracts: EnergyContract[] = [
   {
@@ -223,7 +224,45 @@ const demoPlants: PlantData[] = [
 const EnergyProcurementDashboard: React.FC = () => {
   const [plants, setPlants] = useState(demoPlants);
   const [expandedPlants, setExpandedPlants] = useState<string[]>([]);
-  const [expandedSections, setExpandedSections] = useState<{[key: string]: string[]}>({});
+  const [expandedSections, setExpandedSections] =
+    useState<{ [key: string]: string[] }>({});
+
+// ─────────────────────────────────────────────────────────────
+// fetch persisted Quartalsberichte for Werk 1 and inject them
+// ─────────────────────────────────────────────────────────────
+useEffect(() => {
+  (async () => {
+    try {
+      const dto = await getQuarterlyReports(1);
+
+      const mapped = dto.map(r => ({
+        quarter: r.quarter,
+        year: r.year,
+        startDate: new Date(r.year, (r.quarter - 1) * 3, 1),
+        endDate:   new Date(r.year, r.quarter * 3, 0),
+        submissionDate: new Date(r.submissionDate ?? ''),
+        consumption: { electricity: r.electricity, gas: r.gas },
+        generation:  { pv: 0, chp: 0 }
+      }));
+
+      setPlants(prev =>
+        prev.map(p =>
+          p.id === '1'
+            ? {
+                ...p,
+                energyData: {
+                  ...p.energyData,
+                  quarterlyReports: mapped
+                }
+              }
+            : p
+        )
+      );
+    } catch (e) {
+      console.error('Konnte Quartalsberichte nicht laden', e);
+    }
+  })();
+}, []);
 
   const togglePlant = (plantId: string) => {
     setExpandedPlants(current =>
@@ -231,6 +270,7 @@ const EnergyProcurementDashboard: React.FC = () => {
         ? current.filter(id => id !== plantId)
         : [...current, plantId]
     );
+    
   };
 
   const toggleSection = (plantId: string, section: string) => {

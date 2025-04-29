@@ -4,7 +4,7 @@ import FileUploadZone from '../components/FileUploadZone';
 import { Building2, Upload, ArrowLeft, CalendarIcon, Zap, Flame, MessageSquarePlus } from 'lucide-react';
 import { PlantComment, ConsumptionData, ElectricityData, MeteringPoint } from '../types';
 import { v4 as uuidv4 } from 'uuid';
-import { fetchWerk } from '../api';              // ★ NEW
+import { fetchWerk, postQuarterlyReport } from '../api';
 
 const emptyElectricityData = (): ElectricityData => ({
   total: '',
@@ -138,36 +138,71 @@ const VerbrauchsdatenPage: React.FC = () => {
   };
 
   const validateElectricityValues = (data: ElectricityData): boolean => {
+    console.error('ipasst');
     const values = Object.values(data).map(v => parseFloat(v));
-    if (values.some(isNaN)) return false;
-    if (values.some(v => v < 0)) return false;
+    console.error('ipasstnedso');
+    // if (values.some(isNaN)) return false;
+    // console.error('all values:', ...values);
+    // if (values.some(v => v < 0)) return false;
     
-    const [total, peak, offPeak] = values;
-    if (peak + offPeak > total) return false;
+    // const [total, peak, offPeak] = values;
+    // if (peak + offPeak > total) return false;
     
     return true;
   };
 
-  const handleCurrentYearSubmit = (e: React.FormEvent) => {
+  const handleCurrentYearSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError({ ...error, current: null });
-
+    // clear any previous error message
+    setError(prev => ({ ...prev, current: null }));
+  
+    // grab and parse values
     const { electricity, gas } = consumptionData.currentYear;
     const gasValue = parseFloat(gas);
-
+  
+    // validate electricity inputs
     if (!validateElectricityValues(electricity)) {
-      setError({ ...error, current: 'Bitte überprüfen Sie die Stromverbrauchswerte' });
+      setError(prev => ({
+        ...prev,
+        current: 'Bitte überprüfen Sie die Stromverbrauchswerte'
+      }));
       return;
     }
-
+  
+    // validate gas input
     if (isNaN(gasValue) || gasValue < 0) {
-      setError({ ...error, current: 'Bitte geben Sie einen gültigen Gasverbrauch ein' });
+      setError(prev => ({
+        ...prev,
+        current: 'Bitte geben Sie einen gültigen Gasverbrauch ein'
+      }));
       return;
     }
-
-    console.log('Submitting current year data:', consumptionData.currentYear);
-    navigate('/');
+  
+    try {
+      // compute quarter and year
+      const today   = new Date();
+      const quarter = Math.ceil((today.getMonth() + 1) / 3);
+      const year    = today.getFullYear();
+  
+      // send to back-end for Werk 1
+      await postQuarterlyReport(1, {
+        quarter,
+        year,
+        electricity: parseFloat(electricity.total),
+        gas: gasValue
+      });
+  
+      // on success, return to dashboard
+      navigate('/');
+    } catch (err) {
+      console.error('Fehler beim Speichern:', err);
+      setError(prev => ({
+        ...prev,
+        current: 'Fehler beim Speichern der Daten'
+      }));
+    }
   };
+  
 
   const handleForecastSubmit = (e: React.FormEvent) => {
     e.preventDefault();
