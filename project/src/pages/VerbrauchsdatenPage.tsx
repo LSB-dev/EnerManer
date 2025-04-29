@@ -4,6 +4,7 @@ import FileUploadZone from '../components/FileUploadZone';
 import { Building2, Upload, ArrowLeft, CalendarIcon, Zap, Flame, MessageSquarePlus } from 'lucide-react';
 import { PlantComment, ConsumptionData, ElectricityData, MeteringPoint } from '../types';
 import { v4 as uuidv4 } from 'uuid';
+import { fetchWerk } from '../api';              // ★ NEW
 
 const emptyElectricityData = (): ElectricityData => ({
   total: '',
@@ -17,13 +18,13 @@ const demoMeteringPoints: { [key: string]: MeteringPoint } = {
   'mp1': {
     id: 'mp1',
     name: 'Hauptzähler',
-    meteringPointId: 'DE00012345',
-    billingRecipientId: 'RE98765',
-    institute: 'Institut A',
-    endConsumer: 'Werk001 GmbH',
-    year: 2025,
-    status: 'submitted',
-    reportingMethod: 'smartmeter'
+    meteringPointId: '–',
+    billingRecipientId: '–',
+    institute: '–',
+    endConsumer: '-',
+    year: new Date().getFullYear(),
+    status: 'pending',
+    reportingMethod: 'manual'
   },
   'mp2': {
     id: 'mp2',
@@ -85,6 +86,28 @@ const VerbrauchsdatenPage: React.FC = () => {
     current: null,
     forecast: null
   });
+
+
+  useEffect(() => {                               // ★ NEW block
+    (async () => {
+      try {
+        const data = await fetchWerk();
+        setMeteringPoint({
+          id:              data.messstellenId.toString(),
+          name:            'Hauptzähler',
+          meteringPointId: data.messstellenId.toString(),
+          billingRecipientId: data.rechnungsempfaengerId.toString(),
+          institute:       data.institut,
+          endConsumer:     data.endConsumer.toString(),
+          year:            new Date().getFullYear(),
+          status:          'none',
+          reportingMethod: 'smartmeter'
+        });
+      } catch (e) {
+        console.error('Fehler beim Laden der SQLite-Daten', e);
+      }
+    })();
+  }, []); 
 
   useEffect(() => {
     if (meteringPointId && demoMeteringPoints[meteringPointId]) {
