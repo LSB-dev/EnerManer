@@ -110,6 +110,7 @@ const demoPlants: PlantData[] = [
           startDate: new Date(2024, 0, 1),
           endDate: new Date(2024, 2, 31),
           submissionDate: new Date(2024, 3, 5),
+          gasSupplier: "testo",
           consumption: {
             electricity: 3750,
             gas: 2400
@@ -241,6 +242,7 @@ useEffect(() => {
         startDate: new Date(r.year, (r.quarter - 1) * 3, 1),
         endDate:   new Date(r.year, r.quarter * 3, 0),
         submissionDate: new Date(r.submissionDate ?? ''),
+        gasSupplier: r.gasSupplier,
         consumption: { electricity: r.electricity, gas: r.gas },
         generation:  { pv: 0, chp: 0 }
       }));

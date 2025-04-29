@@ -42,7 +42,8 @@
             year          INTEGER NOT NULL,
             electricity   REAL    NOT NULL,
             gas           REAL    NOT NULL,
-            submissionIso TEXT    NOT NULL
+            submissionIso TEXT    NOT NULL,
+            gasSupplier   TEXT    NOT NULL
         )`
      );
    });
@@ -89,7 +90,7 @@
      const werkId = Number(req.params.id) || 1;
    
      const sql = `
-       SELECT id, quarter, year, electricity, gas, submissionIso
+       SELECT id, quarter, year, electricity, gas, submissionIso, gasSupplier
          FROM QuarterlyReport
         WHERE werkId = ?
         ORDER BY year DESC, quarter DESC
@@ -105,7 +106,8 @@
            year: r.year,
            electricity: r.electricity,
            gas: r.gas,
-           submissionDate: r.submissionIso
+           submissionDate: r.submissionIso,
+           gasSupplier: r.gasSupplier
          }))
        );
      });
@@ -116,7 +118,7 @@
    // ─────────────────────────────────────────────────────────────
    app.post('/api/werk/:id/report', (req, res) => {
      const werkId = Number(req.params.id) || 1;
-     const { quarter, year, electricity, gas } = req.body || {};
+     const { quarter, year, electricity, gas, gasSupplier } = req.body || {};
    
      if (
        ![quarter, year, electricity, gas].every(v => v !== undefined && v !== null)
@@ -134,11 +136,11 @@
    
      const sql = `
        INSERT INTO QuarterlyReport
-         (werkId, quarter, year, electricity, gas, submissionIso)
-       VALUES (?,?,?,?,?,?)
+         (werkId, quarter, year, electricity, gas, submissionIso, gasSupplier)
+       VALUES (?,?,?,?,?,?,?)
      `;
    
-     db.run(sql, [werkId, q, yr, el, gs, submissionIso], function (err) {
+     db.run(sql, [werkId, q, yr, el, gs, submissionIso, gasSupplier], function (err) {
        if (err) return res.status(500).json({ error: err.message });
    
        res.status(201).json({
@@ -148,7 +150,8 @@
          year: yr,
          electricity: el,
          gas: gs,
-         submissionDate: submissionIso
+         submissionDate: submissionIso,
+         gasSupplier: gasSupplier
        });
      });
    });

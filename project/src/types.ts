@@ -106,6 +106,7 @@ export interface QuarterlyReport {
   startDate: Date;
   endDate: Date;
   submissionDate: Date;
+  gasSupplier: string;
   consumption: {
     electricity: number;
     gas: number;

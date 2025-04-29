@@ -23,6 +23,7 @@ export interface QuarterlyReportDto {
   year: number;
   electricity: number;
   gas: number;
+  gasSupplier: string;
   submissionDate?: string;
 }
 

@@ -157,9 +157,9 @@ const VerbrauchsdatenPage: React.FC = () => {
     setError(prev => ({ ...prev, current: null }));
   
     // grab and parse values
-    const { electricity, gas } = consumptionData.currentYear;
+    const { electricity, gas, gasSupplier } = consumptionData.currentYear;
     const gasValue = parseFloat(gas);
-  
+
     // validate electricity inputs
     if (!validateElectricityValues(electricity)) {
       setError(prev => ({
@@ -189,7 +189,8 @@ const VerbrauchsdatenPage: React.FC = () => {
         quarter,
         year,
         electricity: parseFloat(electricity.total),
-        gas: gasValue
+        gas: gasValue,
+        gasSupplier: consumptionData.currentYear.gasSupplier?.trim() || 'Unbekannt'
       });
   
       // on success, return to dashboard
